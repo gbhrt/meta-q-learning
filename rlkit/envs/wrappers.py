@@ -51,6 +51,7 @@ class NormalizedBoxEnv(ProxyEnv, Serializable):
             obs_mean=None,
             obs_std=None,
     ):
+        print('----------------------env:',env.action_space)
         # self._wrapped_env needs to be called first because
         # Serializable.quick_init calls getattr, on this class. And the
         # implementation of getattr (see below) calls self._wrapped_env.

@@ -12,6 +12,8 @@ from misc.utils import set_global_seeds, safemean, read_json
 from misc import logger
 from algs.MQL.buffer import Buffer
 
+# from rlkit.envs.box2d.car_racing import CarRacing
+
 parser = argparse.ArgumentParser()
 
 # Optim params
@@ -29,7 +31,7 @@ parser.add_argument("--policy_freq", default=2, type=int, help='Frequency of del
 parser.add_argument('--hidden_sizes', nargs='+', type=int, default = [300, 300], help = 'indicates hidden size actor/critic')
 
 # General params
-parser.add_argument('--env_name', type=str, default='ant-goal')
+parser.add_argument('--env_name', type=str, default='car_racing-acc')   #ant-goal
 parser.add_argument('--seed', type=int, default=1)
 parser.add_argument('--alg_name', type=str, default='mql')
 
@@ -54,7 +56,7 @@ parser.add_argument('--unbounded_eval_hist', default=False, action='store_true')
 
 #context
 parser.add_argument('--hiddens_conext', nargs='+', type=int, default = [30], help = 'indicates hidden size of context next')
-parser.add_argument('--enable_context', default=True, action='store_true')
+parser.add_argument('--enable_context', default=False, action='store_true')
 parser.add_argument('--only_concat_context', type=int, default = 3, help =' use conext')
 parser.add_argument('--num_tasks_sample', type=int, default = 5)
 parser.add_argument('--num_train_steps', type=int, default = 500)
@@ -66,7 +68,7 @@ parser.add_argument('--beta_clip', default=1.0, type=float, help='Range to clip 
 parser.add_argument('--snapshot_size', type=int, default = 2000, help ='Snapshot size for a task')
 parser.add_argument('--prox_coef', default=0.1, type=float, help ='Prox lambda')
 parser.add_argument('--meta_batch_size', default=10, type=int, help ='Meta batch size: number of sampled tasks per itr')
-parser.add_argument('--enable_adaptation', default=True, action='store_true')
+parser.add_argument('--enable_adaptation', default=False, action='store_true')
 parser.add_argument('--main_snap_iter_nums', default=100, type=int, help ='how many times adapt using train task but with csc')
 parser.add_argument('--snap_iter_nums', default=10, type=int, help ='how many times adapt using eval task')
 parser.add_argument('--type_of_training', default='td3', help = 'td3')
@@ -153,6 +155,7 @@ def make_env(eparams):
                            env_name = eparams.env_name,
                            params = eparams,
                            )
+    # env.render()
 
     return env
 
@@ -266,6 +269,7 @@ def evaluate_policy(eval_env,
         avg_reward = 0
         for _ in range(eparams.num_evals):
             obs = eval_env.reset()
+            print('obs:',obs)
             done = False
             step = 0
 
@@ -287,6 +291,8 @@ def evaluate_policy(eval_env,
                 np_pre_rewards = np.asarray(rewards_hist, dtype=np.float32) #(hist, )
                 np_pre_obsvs  = np.asarray(obsvs_hist, dtype=np.float32).flatten() #(hist, action_dim) => (hist *action_dim,)
                 action = policy.select_action(np.array(obs), np.array(np_pre_actions), np.array(np_pre_rewards), np.array(np_pre_obsvs))
+
+                eval_env.render() # added  5.10.21 gabriel
                 new_obs, reward, done, _ = eval_env.step(action)
                 avg_reward += reward
                 step += 1
@@ -395,6 +401,7 @@ def collect_data_for_adaptaion(eval_env, policy, tidx, eparams):
         np_pre_rewards = np.asarray(rewards_hist, dtype=np.float32) # (hist, )
         np_pre_obsvs  = np.asarray(obsvs_hist, dtype=np.float32).flatten() #(hist, action_dim) => (hist *action_dim,)
         action = policy.select_action(np.array(obs), np.array(np_pre_actions), np.array(np_pre_rewards), np.array(np_pre_obsvs))
+        eval_env.render() # added  5.10.21 gabriel
         new_obs, reward, done, _ = eval_env.step(action)
         avg_reward += reward
 
@@ -493,6 +500,9 @@ if __name__ == "__main__":
 
     ##### env setup #####
     env = make_env(args)
+
+    # env = CarRacing()
+
 
     ######### SEED ##########
     #  build_env already calls set seed,

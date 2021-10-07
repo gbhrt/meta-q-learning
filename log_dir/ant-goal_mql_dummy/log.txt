@@ -1,0 +1,1 @@
+Logging to ./log_dir/ant-goal_mql_dummy

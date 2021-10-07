@@ -1,0 +1,2 @@
+eps_num,iter,critic_loss,actor_loss,csc_samples_neg,csc_samples_pos,train_acc,snap_iter,beta_score,main_critic_loss,main_actor_loss,main_beta_score,main_prox_critic,main_prox_actor,main_avg_prox_coef,tidx,avg_rewards,one_raw_reward
+200,10000,1.165713928558398,0.10884415358304977,200,204,0.9777227722772277,10,1.0,0.03852459036424989,0.031063413880765438,0.32813448,0.2125281497836113,0.011989979390054941,0.09999999999999998,0,-19.999999999999936,-20.000000000000014

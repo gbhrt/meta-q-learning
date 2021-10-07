@@ -104,7 +104,9 @@ class Runner:
                     action = action + np.random.normal(0, self.expl_noise, size=self.env.action_space.shape[0])
                     action = action.clip(self.env.action_space.low, self.env.action_space.high)
 
+            # print('action:', action)
             # Perform action
+            # self.env.render() # added  5.10.21 gabriel
             new_obs, reward, done, _ = self.env.step(action) 
             if episode_timesteps + 1 == self.max_path_length:
                 done_bool = 0
