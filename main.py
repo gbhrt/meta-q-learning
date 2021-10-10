@@ -269,7 +269,7 @@ def evaluate_policy(eval_env,
         avg_reward = 0
         for _ in range(eparams.num_evals):
             obs = eval_env.reset()
-            print('obs:',obs)
+            # print('obs:',obs)
             done = False
             step = 0
 
@@ -401,7 +401,7 @@ def collect_data_for_adaptaion(eval_env, policy, tidx, eparams):
         np_pre_rewards = np.asarray(rewards_hist, dtype=np.float32) # (hist, )
         np_pre_obsvs  = np.asarray(obsvs_hist, dtype=np.float32).flatten() #(hist, action_dim) => (hist *action_dim,)
         action = policy.select_action(np.array(obs), np.array(np_pre_actions), np.array(np_pre_rewards), np.array(np_pre_obsvs))
-        eval_env.render() # added  5.10.21 gabriel
+        # eval_env.render() # added  5.10.21 gabriel
         new_obs, reward, done, _ = eval_env.step(action)
         avg_reward += reward
 
@@ -604,6 +604,9 @@ if __name__ == "__main__":
 
     else:
         raise ValueError("%s model is not supported for %s env" % (args.env_name, env.observation_space.shape))
+
+
+        
 
     ######
     # algorithm setup

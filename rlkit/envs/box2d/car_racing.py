@@ -134,6 +134,7 @@ class CarRacingSimple(gym.Env, EzPickle):
         self.road = None
         self.car = None
         self.vel_vec = []
+        self.acc_vec = []
         self.reward = 0.0
         self.prev_reward = 0.0
         self.verbose = verbose
@@ -395,6 +396,7 @@ class CarRacingSimple(gym.Env, EzPickle):
         self.t = 0.0
         self.road_poly = []
         self.vel_vec = []
+        self.acc_vec = []
 
         while True:
             success = self._create_track()
@@ -450,6 +452,7 @@ class CarRacingSimple(gym.Env, EzPickle):
             self.car.steer(0.0)
             self.car.gas(action[0] if action[0] >= 0 else 0.0)
             self.car.brake(-action[0] if action[0] < 0 else 0.0)
+            self.acc_vec.append(action[0])
 
         self.car.step(1.0 / FPS)
         self.world.Step(1.0 / FPS, 6 * 30, 2 * 30)
@@ -460,6 +463,8 @@ class CarRacingSimple(gym.Env, EzPickle):
         distance_to_target = np.linalg.norm(car_pos-target_pos)
         vel = np.linalg.norm(self.car.hull.linearVelocity)
         self.vel_vec.append(vel)
+        
+        self.car.hull
         self.state =  np.concatenate([
             [vel],
             [distance_to_target]
@@ -470,7 +475,7 @@ class CarRacingSimple(gym.Env, EzPickle):
         step_reward = 0
         done = False
         if action is not None:  # First step without action, called from reset()
-            self.reward -= 0.1
+            # self.reward -= 0.1
             # We actually don't want to count fuel spent, we want car to be faster.
             # self.reward -=  10 * self.car.fuel_spent / ENGINE_POWER
             self.car.fuel_spent = 0.0
@@ -478,14 +483,16 @@ class CarRacingSimple(gym.Env, EzPickle):
             self.prev_reward = self.reward
             x, y = self.car.hull.position
 
-            step_reward = vel/10
+            # step_reward = vel/1000 # is working
+            step_reward = -distance_to_target/1000 # is working
 
             if distance_to_target < self.min_dis_to_target:
                 done = True
-                if vel > 1.0:
-                    step_reward = -100
+                # if vel > 1.0:
+                    # step_reward = -100
 
-                # step_reward = 1.0-(vel/30)**2
+                # step_reward =  - (vel/30)**2 # is working
+                step_reward = 0.0 if vel < 5.0 else - ((vel -5.0)/30)**2 # is working
                 
 
             
@@ -502,6 +509,13 @@ class CarRacingSimple(gym.Env, EzPickle):
         plt.ylim(0, 20)
         plt.cla()
         plt.plot(self.vel_vec)
+
+        plt.figure("acc")
+        plt.xlim(0, 200)
+        plt.ylim(0, 20)
+        plt.cla()
+        plt.plot(self.acc_vec)
+
         plt.draw()
         plt.pause(0.0001)
         ########################

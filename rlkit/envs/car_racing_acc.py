@@ -10,6 +10,9 @@ class CarRacing(CarRacingSimple):
     def __init__(self, task={}, n_tasks=2, randomize_tasks=True):
         self._task = task
         self.tasks = self.sample_tasks(n_tasks)
+        self._acc_factor = self.tasks[0].get('acc_factor', 0.0)     
+        print('sampled a new acceleration factor: ', self._acc_factor)
+
         # directions = [-1, 1]
         # self.tasks = [{'direction': direction} for direction in directions]
         
@@ -31,14 +34,15 @@ class CarRacing(CarRacingSimple):
         # done = False
         # infos = dict(reward_forward=forward_reward,
         #     reward_ctrl=-ctrl_cost, task=self._task)
+        action[0] *= self._acc_factor
         action = np.clip(action,-1.0,1.0)
         return self._step(action)
         # return (observation, reward, done, infos)
 
     def sample_tasks(self, num_tasks):
         np.random.seed(1337)
-        frictions = np.random.uniform(0.1, 1.0, size=(num_tasks,))
-        tasks = [{'friction': frictions} for frictions in frictions]
+        acc_factors = np.random.uniform(0.1, 1.0, size=(num_tasks,))
+        tasks = [{'acc_factor': acc_factor} for acc_factor in acc_factors]
         return tasks
 
 
@@ -47,8 +51,10 @@ class CarRacing(CarRacingSimple):
 
     def reset_task(self, idx):
         self._task = self.tasks[idx]
-        self._goal_dir = self._task['friction']
-        self._goal = self._goal_dir
+        self._acc_factor = self._task['acc_factor']
+        print('sampled a new acceleration factor: ', self._acc_factor)
+
+        # self._goal = self._goal_dir
         self.reset()
     
     def reset(self):
