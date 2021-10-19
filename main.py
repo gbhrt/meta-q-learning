@@ -7,7 +7,7 @@ import numpy as np
 from collections import deque
 import random
 from misc.utils import create_dir, dump_to_json, CSVWriter 
-from misc.torch_utility import get_state
+from misc.torch_utility import get_state, load_model_states
 from misc.utils import set_global_seeds, safemean, read_json
 from misc import logger
 from algs.MQL.buffer import Buffer
@@ -56,7 +56,7 @@ parser.add_argument('--unbounded_eval_hist', default=False, action='store_true')
 
 #context
 parser.add_argument('--hiddens_conext', nargs='+', type=int, default = [30], help = 'indicates hidden size of context next')
-parser.add_argument('--enable_context', default=False, action='store_true')
+parser.add_argument('--enable_context', default=True, action='store_true')
 parser.add_argument('--only_concat_context', type=int, default = 3, help =' use conext')
 parser.add_argument('--num_tasks_sample', type=int, default = 5)
 parser.add_argument('--num_train_steps', type=int, default = 500)
@@ -100,6 +100,14 @@ def update_lr(eparams, iter_num, alg_mth):
         print("Actor (updated_lr):\n ",  alg_mth.actor_optimizer)
         print("Critic (updated_lr):\n ", alg_mth.critic_optimizer)
         print("---------")
+
+def load_snapshot(ck_fname_part, model):
+    fname_ck =  ck_fname_part + '.pt'
+    checkpoint = torch.load(fname_ck)
+    # m_states, _, _ = load_model_states(fname_ck)
+    model.actor.load_state_dict(checkpoint['model_states_actor'])
+    model.critic.load_state_dict(checkpoint['model_states_critic'])
+
 
 def take_snapshot(args, ck_fname_part, model, update):
     '''
@@ -660,6 +668,7 @@ if __name__ == "__main__":
     else:
         raise ValueError("%s alg is not supported" % args.alg_name)
 
+    # load_snapshot(ck_fname_part, alg)
 
     ##### rollout/batch generator
     train_tasks, eval_tasks = sample_env_tasks(env, args)
@@ -779,6 +788,8 @@ if __name__ == "__main__":
     ####
     train_iter = 0 
     lr_updated = False
+
+
     while update_iter < args.total_timesteps:
 
         if args.enable_promp_envs:
@@ -789,6 +800,7 @@ if __name__ == "__main__":
             #shuffle the ind
             train_indices = np.random.choice(train_tasks, len(train_tasks))
 
+        
         for tidx in train_indices:
 
 
@@ -803,15 +815,19 @@ if __name__ == "__main__":
             # run training to calculate loss, run backward, and update params
             #######
             stats_csv = None
+            # print("t1:",time.time() - t0)
 
-            #adjust training steps
+
+            #adjust training steps  
             adjusted_no_steps = adjust_number_train_iters(buffer_size = replay_buffer.size_rb(),
                                      num_train_steps = args.num_train_steps,
                                      bsize = args.batch_size,
                                      min_buffer_size = args.min_buffer_size,
                                      episode_timesteps = avg_epi_length,
                                      use_epi_len_steps = args.use_epi_len_steps)
-
+            # print("adjusted_no_steps:",adjusted_no_steps)
+            # t0 = time.time() #tmp
+            # print("start training:")
             alg_stats, stats_csv = alg.train(replay_buffer = replay_buffer,
                                       iterations = adjusted_no_steps,
                                       tasks_buffer = tasks_buffer,
@@ -819,6 +835,8 @@ if __name__ == "__main__":
                                       task_id = tidx
                                       )
             train_iter += 1
+            # print("end training:",time.time() - t0)
+
             #######
             # logging
             #######
@@ -863,6 +881,8 @@ if __name__ == "__main__":
                     if 'avg_prox_coef' in alg_stats and 'csc_info' in stats_csv:
                         print(("\ravg_prox_coef: %.4f" %(alg_stats['avg_prox_coef'])))
 
+            # print("t4:",time.time() - t0)
+
             #######
             # run eval
             #######
@@ -878,6 +898,7 @@ if __name__ == "__main__":
 
                 else:
                     eval_temp = evaluate_policy(env, alg, episode_num, update_iter, etasks=eval_tasks, eparams=args)
+                # print("t5:",time.time() - t0)
 
                 eval_results.append(eval_temp)
 
@@ -896,6 +917,7 @@ if __name__ == "__main__":
                                                               msg ='Train-Eval')
                 else:
                     train_subset_tasks_eval = 0
+                # print("t6:",time.time() - t0)
 
                 # dump results
                 wrt_csv_eval.write({'nupdates':update_iter,
@@ -905,11 +927,15 @@ if __name__ == "__main__":
                                    'episode_num':episode_num,
                                    'sampling_loop':sampling_loop})
 
+                # print("t7:",time.time() - t0)
+                
+
             #######
             # save for every interval-th episode or for the last epoch
             #######
             if (episode_num % args.save_freq == 0 or episode_num == args.total_timesteps - 1):
                     take_snapshot(args, ck_fname_part, alg, update_iter)
+            # print("t8:",time.time() - t0)
 
             #######
             # Interact and collect data until reset
@@ -939,6 +965,7 @@ if __name__ == "__main__":
                 avg_epi_length += data['episode_timesteps']
 
             avg_epi_length = int(avg_epi_length/args.num_tasks_sample)
+            # print("t9:",time.time() - t0)
 
         # just to keep track of how many times all training tasks have been seen
         sampling_loop += 1

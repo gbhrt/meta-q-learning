@@ -39,6 +39,8 @@ from Box2D.b2 import fixtureDef
 from Box2D.b2 import polygonShape
 from Box2D.b2 import contactListener
 
+import csv
+import datetime
 import gym
 from gym import spaces
 from rlkit.envs.box2d.car_dynamics import Car #gym.envs.  box2d.
@@ -137,13 +139,15 @@ class CarRacingSimple(gym.Env, EzPickle):
         self.acc_vec = []
         self.reward = 0.0
         self.prev_reward = 0.0
+        self.last_action = [0.0]
         self.verbose = verbose
         self.fd_tile = fixtureDef(
             shape=polygonShape(vertices=[(0, 0), (1, 0), (1, -1), (0, -1)])
         )
 
         plt.ion()
-
+        self.vel_filename = 'vel'+datetime.datetime.now().strftime("%Y%m%d-%H%M%S")+'.csv'
+        self.acc_filename = 'acc'+datetime.datetime.now().strftime("%Y%m%d-%H%M%S")+'.csv'
         self.target = None
         self.min_dis_to_target = 5.0
 
@@ -395,9 +399,20 @@ class CarRacingSimple(gym.Env, EzPickle):
         self.tile_visited_count = 0
         self.t = 0.0
         self.road_poly = []
+
+        if len(self.acc_vec) > 1:
+            with open(self.acc_filename, "a") as f:
+                writer = csv.writer(f)
+                writer.writerow(self.acc_vec)
+
+        if len(self.vel_vec) > 1:
+            with open(self.vel_filename, "a") as f:
+                writer = csv.writer(f)
+                writer.writerow(self.vel_vec)
+
         self.vel_vec = []
         self.acc_vec = []
-
+        self.last_action = [0.0]
         while True:
             success = self._create_track()
             if success:
@@ -460,14 +475,15 @@ class CarRacingSimple(gym.Env, EzPickle):
 
         target_pos = np.array(self.target[:2])
         car_pos = np.array(self.car.hull.position)
-        distance_to_target = np.linalg.norm(car_pos-target_pos)
+        distance_to_target = np.linalg.norm(car_pos - target_pos)
+        # print('distance_to_target',distance_to_target)
+
         vel = np.linalg.norm(self.car.hull.linearVelocity)
         self.vel_vec.append(vel)
         
-        self.car.hull
         self.state =  np.concatenate([
-            [vel],
-            [distance_to_target]
+            [vel/30],
+            [distance_to_target/20]
         ]).astype(np.float32).flatten()
         #np.array([vel,distance_to_target])
         
@@ -478,13 +494,13 @@ class CarRacingSimple(gym.Env, EzPickle):
             # self.reward -= 0.1
             # We actually don't want to count fuel spent, we want car to be faster.
             # self.reward -=  10 * self.car.fuel_spent / ENGINE_POWER
-            self.car.fuel_spent = 0.0
+            # self.car.fuel_spent = 0.0
             step_reward = self.reward - self.prev_reward
             self.prev_reward = self.reward
             x, y = self.car.hull.position
 
             # step_reward = vel/1000 # is working
-            step_reward = -distance_to_target/1000 # is working
+            step_reward = -distance_to_target/1000 - 0.01*(action[0] - self.last_action[0])**2# is working
 
             if distance_to_target < self.min_dis_to_target:
                 done = True
@@ -499,11 +515,11 @@ class CarRacingSimple(gym.Env, EzPickle):
             if abs(x) > PLAYFIELD or abs(y) > PLAYFIELD:
                 done = True
                 step_reward = -100
-
+            self.last_action = action[:]
         return self.state, step_reward, done, {}
     def render(self, mode="human"):
 
-        #plot graph using matplotlib:
+       #plot graph using matplotlib:
         plt.figure("velocity")
         plt.xlim(0, 200)
         plt.ylim(0, 20)

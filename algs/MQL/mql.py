@@ -7,6 +7,8 @@ import torch.optim as optim
 from copy import deepcopy
 from sklearn.linear_model import LogisticRegression as logistic
 
+import time #tmp
+
 class MQL:
 
     def __init__(self, 
@@ -480,7 +482,11 @@ class MQL:
             ########
             # Sample replay buffer
             ########
+            # t0 = time.time() #tmp
+
             x, y, u, r, d, pu, pr, px, nu, nr, nx = replay_buffer.sample(self.batch_size)
+            # print("time 1:",time.time() - t0)
+
             obs = torch.FloatTensor(x).to(self.device)
             next_obs = torch.FloatTensor(y).to(self.device)
             action = torch.FloatTensor(u).to(self.device)
@@ -489,6 +495,7 @@ class MQL:
             previous_action = torch.FloatTensor(pu).to(self.device)
             previous_reward = torch.FloatTensor(pr).to(self.device)
             previous_obs = torch.FloatTensor(px).to(self.device)
+            # print("time 2:",time.time() - t0)
 
             # list of hist_actions and hist_rewards which are one time ahead of previous_ones
             # example:
@@ -525,19 +532,26 @@ class MQL:
             target_Q1, target_Q2 = self.critic_target(next_obs, next_action, act_rew)
             target_Q = torch.min(target_Q1, target_Q2)
             target_Q = reward + (mask * self.gamma * target_Q).detach()
+            # print("time 3:",time.time() - t0)
 
             # 2.  Get current Q estimates
             current_Q1, current_Q2 = self.critic(obs, action, pre_act_rew)
+
+            # print("time 4:",time.time() - t0)
 
             # 3. Compute critic loss
             # even we picked min Q, we still need to backprob to both Qs
             critic_loss = F.mse_loss(current_Q1, target_Q) + F.mse_loss(current_Q2, target_Q)
             critic_loss_out += critic_loss.item()
+            # print("time 5:",time.time() - t0)
 
             # 4. Optimize the critic
             self.critic_optimizer.zero_grad()
             critic_loss.backward()
             self.critic_optimizer.step()
+
+            # print("time 6:",time.time() - t0)
+
 
             ########
             # Delayed policy updates
@@ -560,6 +574,8 @@ class MQL:
 
                 for param, target_param in zip(self.actor.parameters(), self.actor_target.parameters()):
                     target_param.data.copy_(self.ptau * param.data + (1 - self.ptau) * target_param.data)
+            # print("time 7:",time.time() - t0)
+
 
         out = {}
         out['critic_loss'] = critic_loss_out/iterations
@@ -567,6 +583,8 @@ class MQL:
 
         # keep a copy of models' params
         self.copy_model_params()
+        # print("time 8:",time.time() - t0)
+
         return out, None
 
     def adapt(self,
