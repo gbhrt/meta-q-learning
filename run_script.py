@@ -123,7 +123,7 @@ def car_racing_acc(seed, log_id, gpu_id):
 	--num_initial_steps 1000 --main_snap_iter_nums 50 --snap_iter_nums 10 --hidden_sizes  300 300 \
 	--lam_csc  0.5  --snapshot_size 2000 --hiddens_conext 20  --lr  0.0003 \
 	--sampling_style replay --sample_mult 10  --use_epi_len_steps  --num_tasks_sample 1 \
-	--burn_in  10000 --batch_size 256 --policy_noise 0.3 --eval_freq 10000  --replay_size 1000000 " + \
+	--burn_in  10000 --batch_size 256 --policy_noise 0.3 --eval_freq 10000  --replay_size 1000000  --max_path_length 500 " + \
 	' --log_id ' + log_id + ' --seed ' + str(seed) + ' --gpu_id ' + str(gpu_id)
 	return cmd
 

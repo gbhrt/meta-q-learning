@@ -1,7 +1,7 @@
 import csv
 import matplotlib.pyplot as plt
 import numpy as np
-
+import json
 
 # date = '20211013-133636'# 0.5 - 1.0 good
 # date = '20211013-141422'# 0.1 - 1.0 not good
@@ -12,13 +12,16 @@ import numpy as np
 # date = '20211014-191522'# -1.0 - -0.5 and 0.5 - 1.0 target 5 - good!!
 # date = '20211017-092253'# ok, change target_distance
 # date = '20211017-095225'# ok, change target_distance, higher cost on action change
-date = '20211018-124201'# 
+# date = '20211020-141403'# multiple targets - ok
+date = '20211022-170040' # multiple targets - ok
+
 
 
 
 pos_filename = 'trajectories/pos'+date+'.csv'
 vel_filename = 'trajectories/vel'+date+'.csv'
 acc_filename = 'trajectories/acc'+date+'.csv'
+targets_filename = 'trajectories/targets'+date+'.csv'
 
 pos_trajectories = []
 with open(pos_filename, newline='') as f:
@@ -36,11 +39,34 @@ with open(acc_filename, newline='') as f:
     for row in reader:
         acc_trajectories.append(row)
 
+targets_vec = []
+with open(targets_filename, newline='') as f:
+    reader = csv.reader(f,quoting=csv.QUOTE_NONNUMERIC)
+    for row in reader:
+        targets_vec.append(row)
+
+target_velocities = []
+target_distances = []
+target_indexes = []
 
 
-end = len(vel_trajectories) -1
+for i in range(0,len(targets_vec),3):
+    target_distances.append(targets_vec[i])
+    target_velocities.append(targets_vec[i+1])
+    target_indexes.append(targets_vec[i+2])
 
-indexes= [end - i for i in range(10)] #[end,end -2]#
+# with open(targets_filename) as json_file:
+#     data = json.load(json_file)
+
+# target_distance_vec = data['distances']
+# target_velocity_vec = data['velocities']
+# indexes = data['indexes']
+
+plt.ion()
+
+end = int(len(vel_trajectories)/2) -1
+
+indexes= [end - i for i in range(0,20)] #[end,end -2]#
 
 fig, ax = plt.subplots()
 # fig.subplots_adjust(right=0.75)
@@ -61,25 +87,37 @@ for i in indexes:
     # plt.figure("acc")
     # plt.plot(pos_trajectories[i][:-1],acc_trajectories[i]) 
     acc_factor = acc_trajectories[i].pop(0)
-    target_to_dist = acc_trajectories[i].pop(0)
-    taget_velocity = acc_trajectories[i].pop(0)
+    max_acc = acc_trajectories[i].pop(0)
+    # target_to_dist = acc_trajectories[i].pop(0)
+    # taget_velocity = acc_trajectories[i].pop(0)
+    # print("vel:",vel_trajectories[i][-1],"taget_velocity:",taget_velocity)
     # if acc_factor == 1:
     #     continue
-    print('acc_factor:',acc_factor)
+    # print('acc_factor:',acc_factor)
+    plt.cla()
+    ax.cla()
+    twin1.cla()
     dt = 0.02
     t = [dt*t for t in range(len(vel_trajectories[i]))]
     # p1, = ax.plot(pos_trajectories[i], "b-", label="Position")
     p2, = ax.plot(t,vel_trajectories[i], label="Velocity")
     p3, = twin1.plot(t[0:-1],acc_trajectories[i], p2.get_color(),linestyle='dashed', label="Acceleration")
+    twin1.plot(t,[max_acc for _ in t],p2.get_color())
+    twin1.plot(t,[-max_acc for _ in t],p2.get_color())
+    target_indexes_time = np.asarray(target_indexes[i])*dt
+    tar_vel = target_velocities[i]
+    tar_vel = tar_vel[:target_indexes_time.size]
 
-    p4, = ax.bar([(len(vel_trajectories[i]) - 1)*dt],[taget_velocity],0.01, color = p2.get_color())
+    ax.bar(target_indexes_time,tar_vel,0.05, color = p2.get_color())
+  
     # p1, = ax.plot(pos_trajectories[i], label="Position")
     # p2, = twin1.plot(vel_trajectories[i], label="Velocity")
     # acc_vec = [acc*acc_factor if acc < 0.0 else acc for acc in acc_trajectories[i]]
     acc_vec = acc_trajectories[i]
     # p3, = twin2.plot(acc_vec, label="Acceleration")
 
-    
+    plt.draw()
+    plt.pause(3.0)
 
 ax.set_xlabel("Time")
 # ax.set_ylabel("Position")

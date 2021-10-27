@@ -107,6 +107,8 @@ def load_snapshot(ck_fname_part, model):
     # m_states, _, _ = load_model_states(fname_ck)
     model.actor.load_state_dict(checkpoint['model_states_actor'])
     model.critic.load_state_dict(checkpoint['model_states_critic'])
+    model.actor_target.load_state_dict(checkpoint['model_states_actor_target'])
+    model.critic_target.load_state_dict(checkpoint['model_states_critic_target'])
 
 
 def take_snapshot(args, ck_fname_part, model, update):
@@ -117,21 +119,29 @@ def take_snapshot(args, ck_fname_part, model, update):
     fname_json =  ck_fname_part + '.json'
     curr_state_actor = get_state(model.actor)
     curr_state_critic = get_state(model.critic)
+    curr_state_actor_target = get_state(model.actor_target)
+    curr_state_critic_target = get_state(model.critic_target)
 
     print('Saving a checkpoint for iteration %d in %s' % (update, fname_ck))
     checkpoint = {
                     'args': args.__dict__,
                     'model_states_actor': curr_state_actor,
                     'model_states_critic': curr_state_critic,
+                    'model_states_actor_target': curr_state_actor_target,
+                    'model_states_critic_target': curr_state_critic_target,
                  }
     torch.save(checkpoint, fname_ck)
 
     del checkpoint['model_states_actor']
     del checkpoint['model_states_critic']
+    del checkpoint['model_states_actor_target']
+    del checkpoint['model_states_critic_target']
     del curr_state_actor
     del curr_state_critic
+    del curr_state_actor_target
+    del curr_state_critic_target
     
-    dump_to_json(fname_json, checkpoint)
+    # dump_to_json(fname_json, checkpoint)
 
 def setup_logAndCheckpoints(args):
 
@@ -621,6 +631,7 @@ if __name__ == "__main__":
     ######
 
     # init replay buffer
+    replay_file_name = "replay/replay.json"
     replay_buffer = Buffer(max_size = args.replay_size)
     
     if str.lower(args.alg_name) == 'mql':
@@ -669,6 +680,7 @@ if __name__ == "__main__":
         raise ValueError("%s alg is not supported" % args.alg_name)
 
     # load_snapshot(ck_fname_part, alg)
+    # rollouts.replay_buffer.load(replay_file_name)
 
     ##### rollout/batch generator
     train_tasks, eval_tasks = sample_env_tasks(env, args)
@@ -935,6 +947,7 @@ if __name__ == "__main__":
             #######
             if (episode_num % args.save_freq == 0 or episode_num == args.total_timesteps - 1):
                     take_snapshot(args, ck_fname_part, alg, update_iter)
+                    rollouts.replay_buffer.save(replay_file_name)
             # print("t8:",time.time() - t0)
 
             #######

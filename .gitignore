@@ -5,3 +5,4 @@ __pycache__
 configs
 **/trajectories
 **/log_dir
+**/replay

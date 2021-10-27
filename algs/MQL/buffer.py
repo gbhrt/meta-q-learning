@@ -1,5 +1,5 @@
 import numpy as np
-
+import json
 # Code based on: 
 # https://github.com/openai/baselines/blob/master/baselines/deepq/replay_buffer.py
 # and https://github.com/sfujim/TD3/blob/master/utils.py
@@ -72,7 +72,39 @@ class Buffer(object):
 			nr.append(np.array(NR, copy=False))
 			nx.append(np.array(NX, copy=False))
 
+
+
+
 		return np.array(x), np.array(y), np.array(u), \
 			   np.array(r).reshape(-1, 1), np.array(d).reshape(-1, 1), \
 			   np.array(pu), np.array(pr), np.array(px),\
 			   np.array(nu), np.array(nr), np.array(nx)
+
+
+	def from_json(self,json_storage ):
+		storage = json_storage
+
+		return storage
+
+	def to_json(self,storage ):
+		json_storage = []
+		for i in range(len(storage)):
+			json_data = []
+			for j in range(len(storage[i])):
+				if isinstance(storage[i][j],np.ndarray):
+					json_data.append(storage[i][j].tolist())
+				else:
+					json_data.append(storage[i][j])
+			json_storage.append(json_data)
+			
+		return json_storage
+
+	def load(self,file_name):		               
+		with open(file_name, 'r') as f:
+			json_storage = json.load(f)
+			self.storage = self.from_json(json_storage)
+
+	def save(self,file_name):	
+		json_storage = self.to_json(self.storage)
+		with open(file_name, 'w') as f:
+			json.dump(json_storage,f)

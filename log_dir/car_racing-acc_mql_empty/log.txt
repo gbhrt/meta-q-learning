@@ -1,1 +1,225 @@
 Logging to ./log_dir/car_racing-acc_mql_empty
+--------------------------------
+| actor_loss        | 0.0203   |
+| adjusted_no_steps | 50       |
+| buffer_size       | 80000    |
+| critic_loss       | 0.0105   |
+| episode_num       | 1600     |
+| episode_reward    | -2.75    |
+| eplenmean         | 50       |
+| eprewmean         | -3.44    |
+| fps               | 4360     |
+| nupdates          | 80000    |
+| sampling_loop     | 1        |
+| total_timesteps   | 80000    |
+--------------------------------
+--------------------------------
+| actor_loss        | -0.0198  |
+| adjusted_no_steps | 200      |
+| buffer_size       | 82000    |
+| critic_loss       | 0.00026  |
+| episode_num       | 1610     |
+| episode_reward    | -0.368   |
+| eplenmean         | 200      |
+| eprewmean         | -0.743   |
+| fps               | 2650     |
+| nupdates          | 82000    |
+| sampling_loop     | 1        |
+| total_timesteps   | 82000    |
+--------------------------------
+--------------------------------
+| actor_loss        | 0.0197   |
+| adjusted_no_steps | 200      |
+| buffer_size       | 84000    |
+| critic_loss       | 4.15     |
+| episode_num       | 1620     |
+| episode_reward    | -56.3    |
+| eplenmean         | 200      |
+| eprewmean         | -175     |
+| fps               | 2359     |
+| nupdates          | 84000    |
+| sampling_loop     | 1        |
+| total_timesteps   | 84000    |
+--------------------------------
+--------------------------------
+| actor_loss        | 0.0888   |
+| adjusted_no_steps | 200      |
+| buffer_size       | 86000    |
+| critic_loss       | 3.52     |
+| episode_num       | 1630     |
+| episode_reward    | -1.99    |
+| eplenmean         | 200      |
+| eprewmean         | -1.99    |
+| fps               | 1143     |
+| nupdates          | 86000    |
+| sampling_loop     | 1        |
+| total_timesteps   | 86000    |
+--------------------------------
+--------------------------------
+| actor_loss        | 0.11     |
+| adjusted_no_steps | 200      |
+| buffer_size       | 88000    |
+| critic_loss       | 1.8      |
+| episode_num       | 1640     |
+| episode_reward    | -0.867   |
+| eplenmean         | 200      |
+| eprewmean         | -1.21    |
+| fps               | 1102     |
+| nupdates          | 88000    |
+| sampling_loop     | 1        |
+| total_timesteps   | 88000    |
+--------------------------------
+--------------------------------
+| actor_loss        | 0.11     |
+| adjusted_no_steps | 200      |
+| buffer_size       | 90000    |
+| critic_loss       | 1.88     |
+| episode_num       | 1650     |
+| episode_reward    | -2.41    |
+| eplenmean         | 200      |
+| eprewmean         | -2.87    |
+| fps               | 1065     |
+| nupdates          | 90000    |
+| sampling_loop     | 1        |
+| total_timesteps   | 90000    |
+--------------------------------
+--------------------------------
+| actor_loss        | 0.104    |
+| adjusted_no_steps | 200      |
+| buffer_size       | 92000    |
+| critic_loss       | 1.12     |
+| episode_num       | 1660     |
+| episode_reward    | -2.53    |
+| eplenmean         | 200      |
+| eprewmean         | -1.38    |
+| fps               | 944      |
+| nupdates          | 92000    |
+| sampling_loop     | 1        |
+| total_timesteps   | 92000    |
+--------------------------------
+--------------------------------
+| actor_loss        | 0.118    |
+| adjusted_no_steps | 200      |
+| buffer_size       | 94000    |
+| critic_loss       | 0.977    |
+| episode_num       | 1670     |
+| episode_reward    | -8.34    |
+| eplenmean         | 200      |
+| eprewmean         | -6.86    |
+| fps               | 920      |
+| nupdates          | 94000    |
+| sampling_loop     | 1        |
+| total_timesteps   | 94000    |
+--------------------------------
+--------------------------------
+| actor_loss        | 0.0847   |
+| adjusted_no_steps | 200      |
+| buffer_size       | 96000    |
+| critic_loss       | 0.297    |
+| episode_num       | 1680     |
+| episode_reward    | -2.25    |
+| eplenmean         | 200      |
+| eprewmean         | -3.68    |
+| fps               | 833      |
+| nupdates          | 96000    |
+| sampling_loop     | 1        |
+| total_timesteps   | 96000    |
+--------------------------------
+--------------------------------
+| actor_loss        | 0.0759   |
+| adjusted_no_steps | 200      |
+| buffer_size       | 98000    |
+| critic_loss       | 0.27     |
+| episode_num       | 1690     |
+| episode_reward    | -1.3     |
+| eplenmean         | 200      |
+| eprewmean         | -1.73    |
+| fps               | 816      |
+| nupdates          | 98000    |
+| sampling_loop     | 1        |
+| total_timesteps   | 98000    |
+--------------------------------
+--------------------------------
+| actor_loss        | 0.105    |
+| adjusted_no_steps | 500      |
+| buffer_size       | 100000   |
+| critic_loss       | 0.224    |
+| episode_num       | 1700     |
+| episode_reward    | -2.49    |
+| eplenmean         | 200      |
+| eprewmean         | -1.84    |
+| fps               | 784      |
+| nupdates          | 100000   |
+| sampling_loop     | 1        |
+| total_timesteps   | 100000   |
+--------------------------------
+--------------------------------
+| actor_loss        | 0.141    |
+| adjusted_no_steps | 500      |
+| buffer_size       | 102000   |
+| critic_loss       | 0.282    |
+| episode_num       | 1710     |
+| episode_reward    | -2.55    |
+| eplenmean         | 200      |
+| eprewmean         | -2.71    |
+| fps               | 698      |
+| nupdates          | 102000   |
+| sampling_loop     | 1        |
+| total_timesteps   | 102000   |
+--------------------------------
+--------------------------------
+| actor_loss        | 0.16     |
+| adjusted_no_steps | 500      |
+| buffer_size       | 104000   |
+| critic_loss       | 0.364    |
+| episode_num       | 1720     |
+| episode_reward    | 1.52     |
+| eplenmean         | 200      |
+| eprewmean         | -0.159   |
+| fps               | 667      |
+| nupdates          | 104000   |
+| sampling_loop     | 1        |
+| total_timesteps   | 104000   |
+--------------------------------
+--------------------------------
+| actor_loss        | 0.203    |
+| adjusted_no_steps | 500      |
+| buffer_size       | 106000   |
+| critic_loss       | 0.162    |
+| episode_num       | 1730     |
+| episode_reward    | -6.95    |
+| eplenmean         | 200      |
+| eprewmean         | -7.46    |
+| fps               | 610      |
+| nupdates          | 106000   |
+| sampling_loop     | 1        |
+| total_timesteps   | 106000   |
+--------------------------------
+--------------------------------
+| actor_loss        | 0.236    |
+| adjusted_no_steps | 500      |
+| buffer_size       | 108000   |
+| critic_loss       | 0.227    |
+| episode_num       | 1740     |
+| episode_reward    | -1.78    |
+| eplenmean         | 200      |
+| eprewmean         | -7.09    |
+| fps               | 590      |
+| nupdates          | 108000   |
+| sampling_loop     | 1        |
+| total_timesteps   | 108000   |
+--------------------------------
+--------------------------------
+| actor_loss        | 0.31     |
+| adjusted_no_steps | 500      |
+| buffer_size       | 110000   |
+| critic_loss       | 0.233    |
+| episode_num       | 1750     |
+| episode_reward    | -4.2     |
+| eplenmean         | 200      |
+| eprewmean         | -19.9    |
+| fps               | 572      |
+| nupdates          | 110000   |
+| sampling_loop     | 1        |
+| total_timesteps   | 110000   |
+--------------------------------
