@@ -126,7 +126,7 @@ def car_racing_acc(seed, log_id, gpu_id):
 	--burn_in  10000 --batch_size 256 --policy_noise 0.3 --eval_freq 10000  --replay_size 1000000  --max_path_length 500 " + \
 	' --log_id ' + log_id + ' --seed ' + str(seed) + ' --gpu_id ' + str(gpu_id)
 	return cmd
-
+# --load
 if __name__ == "__main__":
 
 

@@ -45,6 +45,7 @@ parser.add_argument('--log_dir', default='./log_dir')
 parser.add_argument('--log_interval', type=int, default=10, help='log interval, one log per n updates')
 parser.add_argument('--save_freq', type=int, default = 250)
 parser.add_argument("--eval_freq", default=5e3, type=float, help = 'How often (time steps) we evaluate')    
+parser.add_argument('--load', default=False, action='store_true') 
 
 # Env
 parser.add_argument('--env_configs', default='./configs/pearl_envs.json')
@@ -482,6 +483,7 @@ if __name__ == "__main__":
     config_tasks_envs(args)
     print(args.__dict__)
 
+    
     # if use mujoco-v2, then xml file should be ignore
     if ('-v2' in args.env_name):
         print('**** XML file is ignored since it is -v2 ****')
@@ -629,6 +631,8 @@ if __name__ == "__main__":
     ######
     # algorithm setup
     ######
+    if args.load:
+        args.burn_in = 0
 
     # init replay buffer
     replay_file_name = "replay/replay.json"
@@ -679,8 +683,10 @@ if __name__ == "__main__":
     else:
         raise ValueError("%s alg is not supported" % args.alg_name)
 
-    # load_snapshot(ck_fname_part, alg)
-    # rollouts.replay_buffer.load(replay_file_name)
+    if args.load:
+        load_snapshot(ck_fname_part, alg)
+        rollouts.replay_buffer.load(replay_file_name)
+        print("load models and replay buffer")
 
     ##### rollout/batch generator
     train_tasks, eval_tasks = sample_env_tasks(env, args)

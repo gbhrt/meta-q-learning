@@ -248,11 +248,11 @@ class CarRacingSimple1(gym.Env, EzPickle):
             # self.prev_reward = self.reward
 
             # step_reward = self.vel/1000 - 0.01*(action[0] - self.last_action[0])**2# is working
-            normalized_acc = abs(self.acc_factor * action[0] if action[0] < 0.0 else action[0])
-            acceleration_cost =  0.0 if normalized_acc < self.max_acc  else (self.max_acc - normalized_acc)**2
+            # normalized_acc = abs(self.acc_factor * action[0] if action[0] < 0.0 else action[0])
+            # acceleration_cost =  0.0 if normalized_acc < self.max_acc  else (self.max_acc - normalized_acc)**2
 
             action_cost = (action[0] - self.last_action[0])**2
-            step_reward = self.vel/1000 - 0.1*action_cost -0.2 * acceleration_cost# is working
+            step_reward = self.vel/1000 - 0.1*action_cost #-0.2 * acceleration_cost# is working
             # step_reward = self.acc_factor * self.vel/30 # is working
             # step_reward = -distance_to_target/1000 - 0.01*(action[0] - self.last_action[0])**2# is working
             # print("distance_to_target:",distance_to_target, "min_dis_to_target:",self.min_dis_to_target )
@@ -261,7 +261,7 @@ class CarRacingSimple1(gym.Env, EzPickle):
                 step_reward = 0.0 if self.vel < self.target_vel else - ((self.vel -self.target_vel)*0.5)**2  
                 step_reward -= 0.1*action_cost
                 self.indexes.append(len(self.vel_vec)-1)
-                
+                # print("reward:",step_reward, "vel:",self.vel,"target_vel:",self.target_vel )
                 self.target_index += 1
                 if self.target_index < len(self.target_distance_vec) - 1:
                     self.target_pos += self.target_distance_vec[self.target_index]#np.array(self.target[1])
@@ -269,7 +269,7 @@ class CarRacingSimple1(gym.Env, EzPickle):
                 else:
                     done = True
 
-                print("reward:",step_reward, "vel:",self.vel,"target_vel:",self.target_vel )
+                
 
 
 
