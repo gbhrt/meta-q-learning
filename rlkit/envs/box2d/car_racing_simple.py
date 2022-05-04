@@ -30,20 +30,21 @@ and turn at the same time.
 
 Created by Oleg Klimov. Licensed on the same terms as the rest of OpenAI Gym.
 """
+from curses.ascii import FS
 import sys
 import math
 import numpy as np
 
-import Box2D
-from Box2D.b2 import fixtureDef
-from Box2D.b2 import polygonShape
-from Box2D.b2 import contactListener
+# import Box2D
+# from Box2D.b2 import fixtureDef
+# from Box2D.b2 import polygonShape
+# from Box2D.b2 import contactListener
 
 import csv
 import datetime
 import gym
 from gym import spaces
-from rlkit.envs.box2d.car_dynamics import Car #gym.envs.  box2d.
+# from rlkit.envs.box2d.car_dynamics import Car #gym.envs.  box2d.
 # from car_dynamics import Car 
 from gym.utils import seeding, EzPickle
 
@@ -55,28 +56,6 @@ from gym.utils import seeding, EzPickle
 import matplotlib.pyplot as plt
 import json
 
-STATE_W = 96  # less than Atari 160x192
-STATE_H = 96
-VIDEO_W = 600
-VIDEO_H = 400
-WINDOW_W = 1000
-WINDOW_H = 800
-
-SCALE = 6.0  # Track scale
-TRACK_RAD = 900 / SCALE  # Track is heavily morphed circle with this radius
-PLAYFIELD = 2000 / SCALE  # Game over boundary
-FPS = 50  # Frames per second
-ZOOM = 1.0 #2.7  # Camera zoom
-ZOOM_FOLLOW = False #True  # Set to False for fixed view (don't use zoom)
-
-
-TRACK_DETAIL_STEP = 21 / SCALE
-TRACK_TURN_RATE = 0.31
-TRACK_WIDTH = 40 / SCALE
-BORDER = 8 / SCALE
-BORDER_MIN_COUNT = 4
-
-ROAD_COLOR = [0.4, 0.4, 0.4]
 
 
 class CarRacingSimple1(gym.Env, EzPickle):
@@ -89,9 +68,12 @@ class CarRacingSimple1(gym.Env, EzPickle):
         self.reward = 0.0
         self.prev_reward = 0.0
         self.last_action = [0.0]
-        self.dt = 0.02
-        self.acceleration = 42.0
+        self.dt = 0.04 #0.2
+        self.max_acceleration = 42.0
+        self.max_velocity= 30.0 #50#
+        self.jerk_constant= 10.0
         self.render_flag = False
+        self.add_acc_factor_to_state = False
 
 
         plt.ion()
@@ -115,13 +97,31 @@ class CarRacingSimple1(gym.Env, EzPickle):
         # )
 
         # self.observation_space = spaces.Box(
-        #     np.array([-30.0,0.0,0.0]).astype(np.float32),
-        #     np.array([+30.0,100.0,40.0]).astype(np.float32),
+        #     np.array([0.0]).astype(np.float32),
+        #     np.array([100.0]).astype(np.float32),
         # )
-        self.observation_space = spaces.Box(
-            np.array([-30.0,0.0,0.0,0.0]).astype(np.float32),
-            np.array([+30.0,100.0,40.0,1.0]).astype(np.float32),
-        )
+        # self.observation_space = spaces.Box(
+        #     np.array([-30.0,0.0,0.0,0.0]).astype(np.float32),
+        #     np.array([+30.0,100.0,40.0,1.0]).astype(np.float32),
+        # )
+        if self.add_acc_factor_to_state:
+        #     self.observation_space = spaces.Box(
+        #     np.array([-1.0,0.0,0.0,0.0]).astype(np.float32),
+        #     np.array([+1.0,0.0,1.0,1.0]).astype(np.float32),
+        # )
+            self.observation_space = spaces.Box(
+                np.array([-1.0,0.0,0.0]).astype(np.float32),
+                np.array([+1.0,1.0,1.0]).astype(np.float32),
+            )
+        else:
+            # self.observation_space = spaces.Box(
+            #     np.array([-1.0,0.0,0.0]).astype(np.float32),
+            #     np.array([+1.0,1.0,1.0]).astype(np.float32),
+            # )
+            self.observation_space = spaces.Box(
+                np.array([-1.0,0.0]).astype(np.float32),
+                np.array([+1.0,1.0]).astype(np.float32),
+            )
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -134,20 +134,20 @@ class CarRacingSimple1(gym.Env, EzPickle):
         #plot data from last episode:
         if self.render_flag:
             #plot graph using matplotlib:
-            plt.figure("velocity")
-            plt.xlim(0, 200)
-            plt.ylim(0, 20)
-            plt.cla()
-            plt.plot(self.vel_vec)
+            # plt.figure("velocity")
+            # plt.xlim(0, 200)
+            # plt.ylim(0, 20)
+            # plt.cla()
+            # plt.plot(self.vel_vec)
 
-            plt.figure("acc")
-            plt.xlim(0, 200)
-            plt.ylim(0, 20)
-            plt.cla()
-            plt.plot(self.acc_vec)
+            # plt.figure("acc")
+            # plt.xlim(0, 200)
+            # plt.ylim(0, 20)
+            # plt.cla()
+            # plt.plot(self.acc_vec)
 
-            plt.draw()
-            plt.pause(0.0001)
+            # plt.draw()
+            # plt.pause(0.0001)
 
             
 
@@ -181,6 +181,7 @@ class CarRacingSimple1(gym.Env, EzPickle):
             #         json.dump(data, outfile)
 
         self.acc_factor = acc_factor
+
         self.target_distance_vec = target_distance_vec
         self.target_velocity_vec = target_velocity_vec
         self.max_acc = max_acc
@@ -199,9 +200,11 @@ class CarRacingSimple1(gym.Env, EzPickle):
 
         self.x = 0
         self.vel = 0
+        self.acc = 0
         self.target_index = 0
         self.target_pos = self.target_distance_vec[self.target_index]
-        self.target_vel = self.target_velocity_vec[self.target_index]#np.array(self.target[2])
+        self.target_vel = self.target_velocity_vec[self.target_index]
+        #np.array(self.target[2])
 
         # self.target = [0.0,self.target_distance_vec[self.target_index],self.target_velocity_vec[self.target_index]] #x,y,vel
         # self.target = [0.0,20.0,self.target_velocity_vec[0]] #x,y,vel
@@ -211,11 +214,19 @@ class CarRacingSimple1(gym.Env, EzPickle):
 
     def _step(self, action):
         if action is not None:
-            acc = self.acc_factor * action[0] * self.acceleration if action[0] < 0.0 else action[0] * self.acceleration
-            # acc = self.acc_factor * action[0] * self.acceleration
-            # acc = action[0] * self.acceleration
-            self.vel += acc*self.dt
-            self.vel = np.clip(self.vel,-30.0,30.0)
+            self.acc = self.acc_factor * action[0] * self.max_acceleration if action[0] < 0.0 else action[0] * self.max_acceleration
+            # self.acc = self.acc_factor * action[0] * self.max_acceleration
+
+
+            # jerk = self.acc_factor * action[0] * self.jerk_constant if action[0] < 0.0 else action[0] * self.jerk_constant
+            # self.acc +=  jerk *self.dt ## * 
+            # self.acc = np.clip(self.acc,-self.max_acceleration ,self.max_acceleration )
+
+            # self.acc = action[0] * self.acceleration
+            self.vel += self.acc*self.dt
+            if self.vel < 0.0 or self.vel > self.max_velocity:
+                self.acc = 0.0
+            self.vel = np.clip(self.vel,0.0,self.max_velocity)
             self.x += self.vel*self.dt
 
             self.acc_vec.append(action[0])
@@ -228,12 +239,28 @@ class CarRacingSimple1(gym.Env, EzPickle):
         self.vel_vec.append(self.vel)
         self.pos_vec.append(self.x)
         
-        self.state =  np.concatenate([
-            [self.vel/30],
-            [distance_to_target/20,
-            self.target_vel/30,
-            self.max_acc]
-        ]).astype(np.float32).flatten()
+        if self.add_acc_factor_to_state:
+            self.state =  np.concatenate([
+                [
+                self.vel/self.max_velocity,
+                # self.acc/self.max_acceleration,
+                distance_to_target/20,
+                #
+                # self.target_vel/30,
+                self.acc_factor
+                ]
+            ]).astype(np.float32).flatten()
+        else:
+            self.state =  np.concatenate([
+                [
+                self.vel/self.max_velocity,
+                # self.acc/self.max_acceleration,
+                distance_to_target/20,
+                #
+                # self.target_vel/30,
+                # self.acc_factor
+                ]
+            ]).astype(np.float32).flatten()       
         #np.array([vel,distance_to_target])
         
 
@@ -251,15 +278,21 @@ class CarRacingSimple1(gym.Env, EzPickle):
             # normalized_acc = abs(self.acc_factor * action[0] if action[0] < 0.0 else action[0])
             # acceleration_cost =  0.0 if normalized_acc < self.max_acc  else (self.max_acc - normalized_acc)**2
 
-            action_cost = (action[0] - self.last_action[0])**2
-            step_reward = self.vel/1000 - 0.1*action_cost #-0.2 * acceleration_cost# is working
+            # action_cost = 0.01*(action[0] - self.last_action[0])**2 + 0.001*action[0]
+            action_cost = 0.0
+            # step_reward = np.sign(self.vel)* self.vel**2/1000 - action_cost #-0.2 * acceleration_cost# is working
             # step_reward = self.acc_factor * self.vel/30 # is working
             # step_reward = -distance_to_target/1000 - 0.01*(action[0] - self.last_action[0])**2# is working
             # print("distance_to_target:",distance_to_target, "min_dis_to_target:",self.min_dis_to_target )
-
+            # step_reward = -0.01
+            step_reward = -0.002
             if distance_to_target < self.min_dis_to_target:
-                step_reward = 0.0 if self.vel < self.target_vel else - ((self.vel -self.target_vel)*0.5)**2  
-                step_reward -= 0.1*action_cost
+                # step_reward = 0.0 if self.vel < self.target_vel else - 0.00001*((self.vel -self.target_vel))**2  
+                # step_reward = 0.0 if self.vel < self.target_vel else - 0.000001*((self.vel -self.target_vel))**2  
+                # step_reward = 0.0 if self.vel < self.target_vel else - 0.01*((self.vel -self.target_vel))**2  
+                # step_reward = 0.0 if self.vel < self.target_vel else - 0.05*((self.vel -self.target_vel))**2  
+                step_reward = 0.0 if self.vel < self.target_vel else - 0.01*((self.vel -self.target_vel))**2  
+                step_reward -= action_cost
                 self.indexes.append(len(self.vel_vec)-1)
                 # print("reward:",step_reward, "vel:",self.vel,"target_vel:",self.target_vel )
                 self.target_index += 1
@@ -269,17 +302,6 @@ class CarRacingSimple1(gym.Env, EzPickle):
                 else:
                     done = True
 
-                
-
-
-
-            # if distance_to_target < self.min_dis_to_target:
-            #     
-            #     # if vel > 1.0:
-            #         # step_reward = -100
-
-            #     # step_reward =  - (vel/30)**2 # is working
-            #     # step_reward = 0.0 if self.vel < 5.0 else - ((self.vel -target_vel)/5)**2 # is working
             #     step_reward = 0.0 if self.vel < target_vel else - ((self.vel -target_vel)*0.5)**2# 
                 # print("reward:",step_reward, "vel:",self.vel,"target_vel:",target_vel )
 

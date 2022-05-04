@@ -18,7 +18,7 @@ parser = argparse.ArgumentParser()
 
 # Optim params
 parser.add_argument('--lr', type=float, default=0.0003, help = 'Learning rate')
-parser.add_argument('--replay_size', type=int, default = 1e6, help ='Replay buffer size int(1e6)')
+parser.add_argument('--replay_size', type=int, default = 1e5, help ='Replay buffer size int(1e6)')
 parser.add_argument('--ptau', type=float, default=0.005 , help = 'Interpolation factor in polyak averaging')
 parser.add_argument('--gamma', type=float, default=0.99, help = 'Discount factor [0,1]')
 parser.add_argument("--burn_in", default=1e4, type=int, help = 'How many time steps purely random policy is run for') 
@@ -43,8 +43,8 @@ parser.add_argument('--log_id', default='empty')
 parser.add_argument('--check_point_dir', default='./ck')
 parser.add_argument('--log_dir', default='./log_dir')
 parser.add_argument('--log_interval', type=int, default=10, help='log interval, one log per n updates')
-parser.add_argument('--save_freq', type=int, default = 250)
-parser.add_argument("--eval_freq", default=5e3, type=float, help = 'How often (time steps) we evaluate')    
+parser.add_argument('--save_freq', type=int, default = 2000)
+parser.add_argument("--eval_freq", default=10000, type=float, help = 'How often (time steps) we evaluate')    
 parser.add_argument('--load', default=False, action='store_true') 
 
 # Env
@@ -69,7 +69,7 @@ parser.add_argument('--beta_clip', default=1.0, type=float, help='Range to clip 
 parser.add_argument('--snapshot_size', type=int, default = 2000, help ='Snapshot size for a task')
 parser.add_argument('--prox_coef', default=0.1, type=float, help ='Prox lambda')
 parser.add_argument('--meta_batch_size', default=10, type=int, help ='Meta batch size: number of sampled tasks per itr')
-parser.add_argument('--enable_adaptation', default=False, action='store_true')
+parser.add_argument('--enable_adaptation', default=True, action='store_true')
 parser.add_argument('--main_snap_iter_nums', default=100, type=int, help ='how many times adapt using train task but with csc')
 parser.add_argument('--snap_iter_nums', default=10, type=int, help ='how many times adapt using eval task')
 parser.add_argument('--type_of_training', default='td3', help = 'td3')
@@ -189,9 +189,19 @@ def sample_env_tasks(env, eparams):
 
     else:
         # task list created as [ train_task,..., train_task ,eval_task,..., eval_task]
+        # tasks = env.get_all_task_idx()
+        # train_tasks = list(tasks[:eparams.n_train_tasks])
+        # eval_tasks = list(tasks[-eparams.n_eval_tasks:])
         tasks = env.get_all_task_idx()
-        train_tasks = list(tasks[:eparams.n_train_tasks])
-        eval_tasks = list(tasks[-eparams.n_eval_tasks:])
+        # train_tasks = list(tasks[:eparams.n_train_tasks])
+        # eval_tasks = list(tasks[-eparams.n_eval_tasks:])
+   
+        train_tasks = list(tasks)
+        # eval_tasks = [5,19]
+        eval_tasks = [2,22]
+        # eval_tasks = [3,23]
+        for eval_task in eval_tasks:
+            train_tasks.remove(eval_task)
 
     return train_tasks, eval_tasks
 
@@ -780,6 +790,8 @@ if __name__ == "__main__":
             else:
                 # for pearl env, tidx == idx
                 env.reset_task(tidx) # tidx here is an id
+                env.reset_task(tidx,rand = True)
+                
 
             data = rollouts.run(update_iter, keep_burning = True, task_id=tidx,
                                 early_leave = args.max_path_length/4) # data collection is way important now
